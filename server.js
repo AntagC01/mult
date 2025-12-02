@@ -14,17 +14,18 @@ let players = {};
 io.on("connection", socket => {
     console.log("New player:", socket.id);
 
+    // Player padrão (fixo, sem movimento)
     players[socket.id] = { x: 100, y: 100 };
 
+    // Envia lista atual para quem entrou
     socket.emit("currentPlayers", players);
+
+    // Notifica os outros
     socket.broadcast.emit("newPlayer", { id: socket.id, x: 100, y: 100 });
 
-    socket.on("move", data => {
-        if (players[socket.id]) {
-            players[socket.id].x = data.x;
-            players[socket.id].y = data.y;
-            io.emit("playerMoved", { id: socket.id, x: data.x, y: data.y });
-        }
+    // === NOVO: Mensagem para todos ===
+    socket.on("broadcastMessage", msg => {
+        io.emit("broadcastMessage", msg);
     });
 
     socket.on("disconnect", () => {
