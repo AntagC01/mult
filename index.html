@@ -8,6 +8,7 @@
 </head>
 <body>
 
+<button id="sendMsg">Enviar Mensagem</button>
 <canvas id="game" width="800" height="800"></canvas>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -25,27 +26,18 @@ socket.on("newPlayer", player => {
     players[player.id] = { x: player.x, y: player.y };
 });
 
-socket.on("playerMoved", data => {
-    if (players[data.id]) {
-        players[data.id].x = data.x;
-        players[data.id].y = data.y;
-    }
-});
-
 socket.on("playerDisconnected", id => {
     delete players[id];
 });
 
-// Movement with arrow keys
-let myX = 100, myY = 100;
+// === NOVO: Receber mensagem global ===
+socket.on("broadcastMessage", msg => {
+    alert("📢 Mensagem global: " + msg);
+});
 
-document.addEventListener("keydown", e => {
-    if (e.key === "ArrowUp") myY -= 5;
-    if (e.key === "ArrowDown") myY += 5;
-    if (e.key === "ArrowLeft") myX -= 5;
-    if (e.key === "ArrowRight") myX += 5;
-
-    socket.emit("move", { x: myX, y: myY });
+// === NOVO: Botão para enviar mensagem ===
+document.getElementById("sendMsg").addEventListener("click", () => {
+    socket.emit("broadcastMessage", "Olá jogadores!");
 });
 
 function gameLoop() {
