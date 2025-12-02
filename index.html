@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multiplayer Test</title>
+    <style>
+        canvas { background: #222; display: block; margin: auto; }
+    </style>
+</head>
+<body>
+
+<canvas id="game" width="600" height="400"></canvas>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let players = {};
+
+socket.on("currentPlayers", p => players = p);
+
+socket.on("newPlayer", player => {
+    players[player.id] = { x: player.x, y: player.y };
+});
+
+socket.on("playerMoved", data => {
+    if (players[data.id]) {
+        players[data.id].x = data.x;
+        players[data.id].y = data.y;
+    }
+});
+
+socket.on("playerDisconnected", id => {
+    delete players[id];
+});
+
+// Movement with arrow keys
+let myX = 100, myY = 100;
+
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp") myY -= 5;
+    if (e.key === "ArrowDown") myY += 5;
+    if (e.key === "ArrowLeft") myX -= 5;
+    if (e.key === "ArrowRight") myX += 5;
+
+    socket.emit("move", { x: myX, y: myY });
+});
+
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let id in players) {
+        const p = players[id];
+        ctx.fillStyle = id === socket.id ? "yellow" : "white";
+        ctx.fillRect(p.x, p.y, 20, 20);
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
